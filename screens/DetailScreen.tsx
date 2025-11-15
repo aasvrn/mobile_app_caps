@@ -1,10 +1,10 @@
 import React, { useEffect, useState, useContext } from 'react';
 import { View, Text, Image, TouchableOpacity } from 'react-native';
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { StackScreenProps } from '@react-navigation/stack';
 import { RootStackParamList, FavoriteContext } from '../App';
 import { Ionicons } from '@expo/vector-icons';
 
-type Props = NativeStackScreenProps<RootStackParamList, 'Detail'>;
+type Props = StackScreenProps<RootStackParamList, 'Detail'>;
 
 export default function DetailScreen({ route }: Props) {
   const { id } = route.params;

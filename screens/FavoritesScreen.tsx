@@ -24,5 +24,5 @@ export default function FavoritesScreen() {
     </View>
   );
 
-  return <FlatList data={items} keyExtractor={i => String(i.id)} renderItem={renderItem} />;
+  return <FlatList data={items} keyExtractor={(i: Item) => String(i.id)} renderItem={renderItem} />;
 }

@@ -55,8 +55,8 @@ function AuthNavigator() {
 function TabsNavigator() {
   return (
     <Tab.Navigator
-      screenOptions={({ route }) => ({
-        tabBarIcon: ({ color, size }) => {
+      screenOptions={({ route }: { route: { name: keyof TabParamList } }) => ({
+        tabBarIcon: ({ color, size }: { color: string; size: number }) => {
           const icon = route.name === 'Home' ? 'home' : route.name === 'Favorites' ? 'heart' : 'settings';
           return <Ionicons name={icon as any} size={size} color={color} />;
         }
@@ -73,7 +73,7 @@ export default function App() {
   const [favorites, setFavorites] = useState<number[]>([]);
 
   useEffect(() => {
-    AsyncStorage.getItem('favorites').then(v => {
+    AsyncStorage.getItem('favorites').then((v: string | null) => {
       if (v) setFavorites(JSON.parse(v));
     });
   }, []);
@@ -95,7 +95,7 @@ export default function App() {
           <NavigationContainer>
             <RootStack.Navigator>
               <RootStack.Screen name="Auth" component={AuthNavigator} options={{ headerShown: false }} />
-              <RootStack.Screen name="Main" component={TabsNavigator} options={({ navigation }) => ({
+              <RootStack.Screen name="Main" component={TabsNavigator} options={({ navigation }: { navigation: any }) => ({
                 headerRight: () => (
                   <TouchableOpacity onPress={() => navigation.navigate('Detail', { id: 1, title: 'Sample' })}>
                     <Ionicons name="navigate" size={22} />
@@ -103,7 +103,7 @@ export default function App() {
                 ),
                 title: 'Main'
               })} />
-              <RootStack.Screen name="Detail" component={DetailScreen} options={({ route }) => ({ title: route.params.title })} />
+              <RootStack.Screen name="Detail" component={DetailScreen} options={({ route }: { route: any }) => ({ title: route.params.title })} />
             </RootStack.Navigator>
           </NavigationContainer>
         </SafeAreaProvider>
