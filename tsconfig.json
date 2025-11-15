@@ -4,10 +4,25 @@
     "module": "ESNext",
     "jsx": "react-jsx",
     "strict": true,
-    "moduleResolution": "node",
-    "resolveJsonModule": true,
+    "noEmit": true,
     "esModuleInterop": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "types": [
+      "react",
+      "react-native"
+    ],
+    "allowJs": false,
+    "resolveJsonModule": true,
+    "baseUrl": "."
   },
-  "include": ["App.tsx", "src"]
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    "**/*.d.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "lib/notifications.native.ts"
+  ],
+  "extends": "expo/tsconfig.base"
 }

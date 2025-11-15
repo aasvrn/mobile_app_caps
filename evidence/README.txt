@@ -1,0 +1,1 @@
+Place all required screenshots for submission in this folder.

@@ -1,55 +1,113 @@
+import 'react-native-gesture-handler';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Text, TouchableOpacity } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { StatusBar } from 'expo-status-bar';
-import React from 'react';
-import { AuthProvider, useAuth } from './src/context/AuthContext';
-import LoginScreen from './src/screens/Auth/LoginScreen';
-import SignupScreen from './src/screens/Auth/SignupScreen';
-import HomeScreen from './src/screens/HomeScreen';
-import DetailScreen from './src/screens/DetailScreen';
-import FavoritesScreen from './src/screens/FavoritesScreen';
-import ApiIntegrationScreen from './src/screens/ApiIntegrationScreen';
-import SettingsMenu from './src/screens/SettingsMenu';
-import SettingsScreen from './src/screens/SettingsScreen';
-import NotificationsScreen from './src/screens/NotificationsScreen';
+import { createStackNavigator } from '@react-navigation/stack';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Ionicons } from '@expo/vector-icons';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import LoginScreen from './screens/LoginScreen';
+import SignupScreen from './screens/SignupScreen';
+import HomeScreen from './screens/HomeScreen';
+import DetailScreen from './screens/DetailScreen';
+import FavoritesScreen from './screens/FavoritesScreen';
+import SettingsScreen from './screens/SettingsScreen';
 
-const Stack = createNativeStackNavigator();
+export type RootStackParamList = {
+  Auth: undefined;
+  Main: undefined;
+  Detail: { id: number; title: string };
+};
 
-function AppStack() {
+export type AuthStackParamList = {
+  Login: undefined;
+  Signup: undefined;
+};
+
+export type TabParamList = {
+  Home: undefined;
+  Favorites: undefined;
+  Settings: undefined;
+};
+
+export type FavoriteContextType = {
+  favorites: number[];
+  toggleFavorite: (id: number) => void;
+};
+
+export const FavoriteContext = React.createContext<FavoriteContextType>({ favorites: [], toggleFavorite: () => {} });
+
+const RootStack = createStackNavigator<RootStackParamList>();
+const AuthStack = createStackNavigator<AuthStackParamList>();
+const Tab = createBottomTabNavigator<TabParamList>();
+
+function AuthNavigator() {
   return (
-    <Stack.Navigator initialRouteName="Home">
-      <Stack.Screen name="Home" component={HomeScreen} options={{ headerTitle: 'MobileCaps' }} />
-      <Stack.Screen name="Detail" component={DetailScreen} />
-      <Stack.Screen name="Favorites" component={FavoritesScreen} />
-      <Stack.Screen name="API" component={ApiIntegrationScreen} />
-      <Stack.Screen name="SettingsMenu" component={SettingsMenu} />
-      <Stack.Screen name="Settings" component={SettingsScreen} />
-      <Stack.Screen name="Notifications" component={NotificationsScreen} />
-    </Stack.Navigator>
+    <AuthStack.Navigator>
+      <AuthStack.Screen name="Login" component={LoginScreen} options={{ title: 'Login' }} />
+      <AuthStack.Screen name="Signup" component={SignupScreen} options={{ title: 'Sign Up' }} />
+    </AuthStack.Navigator>
   );
 }
 
-function Root() {
-  const { user } = useAuth();
+function TabsNavigator() {
   return (
-    <NavigationContainer>
-      {user ? (
-        <AppStack />
-      ) : (
-        <Stack.Navigator initialRouteName="Login">
-          <Stack.Screen name="Login" component={LoginScreen} />
-          <Stack.Screen name="Signup" component={SignupScreen} />
-        </Stack.Navigator>
-      )}
-      <StatusBar style="auto" />
-    </NavigationContainer>
+    <Tab.Navigator
+      screenOptions={({ route }) => ({
+        tabBarIcon: ({ color, size }) => {
+          const icon = route.name === 'Home' ? 'home' : route.name === 'Favorites' ? 'heart' : 'settings';
+          return <Ionicons name={icon as any} size={size} color={color} />;
+        }
+      })}
+    >
+      <Tab.Screen name="Home" component={HomeScreen} options={{ headerTitle: () => <Text style={{ fontWeight: 'bold' }}>MyApp</Text> }} />
+      <Tab.Screen name="Favorites" component={FavoritesScreen} />
+      <Tab.Screen name="Settings" component={SettingsScreen} />
+    </Tab.Navigator>
   );
 }
 
 export default function App() {
+  const [favorites, setFavorites] = useState<number[]>([]);
+
+  useEffect(() => {
+    AsyncStorage.getItem('favorites').then(v => {
+      if (v) setFavorites(JSON.parse(v));
+    });
+  }, []);
+
+  const toggleFavorite = (id: number) => {
+    setFavorites(prev => {
+      const next = prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id];
+      AsyncStorage.setItem('favorites', JSON.stringify(next));
+      return next;
+    });
+  };
+
+  const ctx = useMemo(() => ({ favorites, toggleFavorite }), [favorites]);
+
   return (
-    <AuthProvider>
-      <Root />
-    </AuthProvider>
+    <FavoriteContext.Provider value={ctx}>
+      <GestureHandlerRootView style={{ flex: 1, backgroundColor: '#fff' }}>
+        <SafeAreaProvider>
+          <NavigationContainer>
+            <RootStack.Navigator>
+              <RootStack.Screen name="Auth" component={AuthNavigator} options={{ headerShown: false }} />
+              <RootStack.Screen name="Main" component={TabsNavigator} options={({ navigation }) => ({
+                headerRight: () => (
+                  <TouchableOpacity onPress={() => navigation.navigate('Detail', { id: 1, title: 'Sample' })}>
+                    <Ionicons name="navigate" size={22} />
+                  </TouchableOpacity>
+                ),
+                title: 'Main'
+              })} />
+              <RootStack.Screen name="Detail" component={DetailScreen} options={({ route }) => ({ title: route.params.title })} />
+            </RootStack.Navigator>
+          </NavigationContainer>
+        </SafeAreaProvider>
+      </GestureHandlerRootView>
+    </FavoriteContext.Provider>
   );
 }
